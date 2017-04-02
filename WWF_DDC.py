@@ -70,7 +70,6 @@ Note, "of" isnt an exact match with ".f." but I thought it'd be good to include.
                 #L_m==letter_matches
                 finalSetPairs.append([index,L_m])
         s2=self.fast_intersection(finalSetPairs)
-        print(len(s),"  ",len(s2))
         return s2
     def fast_intersection(self,finalSetPairs):
         """needs work
