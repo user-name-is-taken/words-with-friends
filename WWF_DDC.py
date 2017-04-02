@@ -6,6 +6,14 @@ you could add the '+' to the add word.
     Remember seq is a subset of word
 """
 import itertools
+import timeit
+
+def timer(val):
+    """times"""
+    start=timeit.default_timer()
+    ff.find_matches(val)
+    stop=timeit.default_timer()
+    return stop-start
 
 class Regex_list(object):
     """this will make your word list searchable.
@@ -39,38 +47,31 @@ Uses '.' as wildcard.
 (remember it only finds exact matches)"""
         assert len(seq)>=2    
         s_d = self.search_dict
-        setsList =[]
-        finalSetPairs=list()#test
+        finalSetPairs=list()
         while seq[-1]=='.' and len(seq)>2:#problem
             """not solved by if index+1=='.' because there's no [letter][''] for word endings in self.search_dict.
-#without this, .f. wouldn't find (0,"of"), because the L_m in the seq[index+1]=="." if wouldn't include it.
+#without this, ".f." wouldn't find (0,"of"), because the L_m in the seq[index+1]=="." if wouldn't include it.
 #the len>2 is needed to find sequences matches that are like "f."
 despite these improvements, 1 letter sequences still won't be found. but they're obvious...
 worst case, just search self.all_words for them
+Note, "of" isnt an exact match with ".f." but I thought it'd be good to include.
 """
             seq = seq[:-1]
         for index,letter in enumerate(seq[:-1]):
             if not(letter=="." and seq[index+1]=="."):#no point if they all match...
                 if letter==".":
                     L_m = set.union(*(i.get(seq[index+1],set()) for i in s_d.values()))
-                    #.get is important here. not all is have i[seq[index+1]]
+                    #.get is important here. not all i's have i[seq[index+1]]
                 elif seq[index+1]==".":
                     L_m = set.union(*s_d[letter].values())
                 else:
                     L_m = s_d[letter].get(seq[index+1],{})#this is a set.
                     #not using s_d.get could cause errors here...
                 #L_m==letter_matches
-                setsList.append({(i-index,word) for i,word in L_m})
-                finalSetPairs.append([index,L_m])#test
-                #finding a workaround for this would be a good idea
-                #so you don't have to do so many i-index operations
-                #maybe switch it to an add and perform it iteratively
-                #if you do letter freq you cant do the add intersect
-                #if you do the add intersect you're add to the intersected set obvi
-        s= set.intersection(*setsList)
+                finalSetPairs.append([index,L_m])
         s2=self.fast_intersection(finalSetPairs)
         print(len(s),"  ",len(s2))
-        return s
+        return s2
     def fast_intersection(self,finalSetPairs):
         """needs work
 ff.find_matches("g..rs")
@@ -79,10 +80,10 @@ theres a string of enumerates here that are complicated but
 provid speed
 """
         sorted_pairs=sorted(finalSetPairs,key=lambda x: len(x[1]))
-        offset=sorted_pairs[0][0]
         thisSet=sorted_pairs[0][1]
-        for index,pair in enumerate(sorted_pairs[1:]):        
-            offset=(pair[0]-offset)#sorted_pairs[index-1][0])
+        for index,pair in enumerate(sorted_pairs[1:]):
+            offset=(pair[0]-sorted_pairs[index][0])
+            #note: sorted_pairs[1:][index-1][0]== sorted_pairs[index][0]
             thisSet={(i+offset,word) for i,word in thisSet}
             thisSet.intersection_update(pair[1])            
         return thisSet
@@ -114,8 +115,9 @@ for example in scrabble, "of" would fit +.f..g.k+
         seqs=self.find_scrabble_strings(seq)
         for seq in seqs:
             setsList.append(self.find_matches(seq))
-        return set.union(*setsList)                
-            
+        return set.union(*setsList)
+
+
 if __name__=="__main__":
     from scrabble import make_words_list
     d = make_words_list()
